@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Tetris estilo clássico para navegador, responsivo e com controles para celular." />
+    <title>Tetris Clássico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel hero-card">
+        <p class="eyebrow">Minigame clássico dos anos 90</p>
+        <h1>TETRIS</h1>
+        <p class="subtitle">Versão oficial de arcade, com aparência retrô, jogabilidade clássica e controles otimizados para celular.</p>
+
+        <div class="stats-grid">
+          <article class="stat-box"><span>Pontos</span><strong id="score">0</strong></article>
+          <article class="stat-box"><span>Nível</span><strong id="level">1</strong></article>
+          <article class="stat-box"><span>Linhas</span><strong id="lines">0</strong></article>
+        </div>
+
+        <div class="actions-row">
+          <button id="startBtn" class="btn primary">Iniciar / Reiniciar</button>
+          <button id="pauseBtn" class="btn">Pausar</button>
+        </div>
+      </section>
+
+      <section class="panel game-card">
+        <div class="board-wrap">
+          <canvas id="board" width="300" height="600" aria-label="Tela de Tetris"></canvas>
+          <div id="overlay" class="overlay hidden">
+            <h2 id="overlayTitle">Pronto para jogar?</h2>
+            <p id="overlayText">Use as setas para mover, Espaço para girar e Enter para a queda rápida.</p>
+            <button id="overlayBtn" class="btn primary">Começar</button>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <article class="mini-card">
+            <h2>Próxima peça</h2>
+            <canvas id="next" width="140" height="140" aria-label="Pré-visualização da próxima peça"></canvas>
+          </article>
+
+          <article class="mini-card controls-card">
+            <h2>Controles</h2>
+            <ul>
+              <li>Setas: mover</li>
+              <li>Espaço: girar</li>
+              <li>Enter: queda rápida</li>
+              <li>P: pausa</li>
+              <li>R: reiniciar</li>
+            </ul>
+          </article>
+
+          <article class="mini-card touch-card">
+            <h2>Toque</h2>
+            <div class="touch-grid">
+              <button data-action="left" class="touch-btn">←</button>
+              <button data-action="rotate" class="touch-btn">↻</button>
+              <button data-action="right" class="touch-btn">→</button>
+              <button data-action="down" class="touch-btn">↓</button>
+              <button data-action="drop" class="touch-btn drop">Queda</button>
+            </div>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
