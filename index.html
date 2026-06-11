@@ -15,7 +15,7 @@
       <section class="panel hero-card">
         <p class="eyebrow">Minigame clássico dos anos 90</p>
         <h1>TETRIS</h1>
-        <p class="subtitle">Versão oficial de arcade, com aparência retrô, jogabilidade clássica e controles otimizados para celular.</p>
+        <p class="subtitle">Jogo clássico inspirado no Tetris de arcade dos anos 90, com visual retrô e controles simples.</p>
 
         <div class="stats-grid">
           <article class="stat-box"><span>Pontos</span><strong id="score">0</strong></article>
@@ -26,7 +26,10 @@
         <div class="actions-row">
           <button id="startBtn" class="btn primary">Iniciar / Reiniciar</button>
           <button id="pauseBtn" class="btn">Pausar</button>
+          <button id="soundBtn" class="btn">Som: ligado</button>
         </div>
+
+        <div id="bonusBanner" class="bonus-banner hidden">PEÇA BÔNUS ATIVA</div>
       </section>
 
       <section class="panel game-card">
@@ -58,12 +61,14 @@
 
           <article class="mini-card touch-card">
             <h2>Toque</h2>
-            <div class="touch-grid">
-              <button data-action="left" class="touch-btn">←</button>
-              <button data-action="rotate" class="touch-btn">↻</button>
-              <button data-action="right" class="touch-btn">→</button>
-              <button data-action="down" class="touch-btn">↓</button>
-              <button data-action="drop" class="touch-btn drop">Queda</button>
+            <div class="touch-layout">
+              <div class="touch-pad" aria-label="Controles de direção">
+                <button data-action="left" class="touch-btn touch-btn--circle touch-btn--left">←</button>
+                <button data-action="rotate" class="touch-btn touch-btn--circle touch-btn--center">+</button>
+                <button data-action="right" class="touch-btn touch-btn--circle touch-btn--right">→</button>
+                <button data-action="down" class="touch-btn touch-btn--circle touch-btn--down">↓</button>
+              </div>
+              <button data-action="drop" class="touch-btn touch-btn--drop">Queda</button>
             </div>
           </article>
         </aside>

@@ -12,23 +12,31 @@ const levelEl = document.getElementById('level');
 const linesEl = document.getElementById('lines');
 const startBtn = document.getElementById('startBtn');
 const pauseBtn = document.getElementById('pauseBtn');
+const soundBtn = document.getElementById('soundBtn');
 const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlayTitle');
 const overlayText = document.getElementById('overlayText');
 const overlayBtn = document.getElementById('overlayBtn');
+const gameCard = document.querySelector('.game-card');
+const bonusBanner = document.getElementById('bonusBanner');
 
 const PIECES = {
-  I: { color: '#53d5ff', shape: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]] },
-  O: { color: '#ffe15a', shape: [[1, 1], [1, 1]] },
+  I: { color: '#48d9ff', shape: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]] },
+  O: { color: '#ffe45c', shape: [[1, 1], [1, 1]] },
   T: { color: '#b388ff', shape: [[0, 1, 0], [1, 1, 1], [0, 0, 0]] },
-  S: { color: '#6eff9e', shape: [[0, 1, 1], [1, 1, 0], [0, 0, 0]] },
+  S: { color: '#68ef9e', shape: [[0, 1, 1], [1, 1, 0], [0, 0, 0]] },
   Z: { color: '#ff6b8a', shape: [[1, 1, 0], [0, 1, 1], [0, 0, 0]] },
-  J: { color: '#7ad1ff', shape: [[1, 0, 0], [1, 1, 1], [0, 0, 0]] },
-  L: { color: '#ffbe70', shape: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] },
+  J: { color: '#70c8ff', shape: [[1, 0, 0], [1, 1, 1], [0, 0, 0]] },
+  L: { color: '#ffb864', shape: [[0, 0, 1], [1, 1, 1], [0, 0, 0]] },
+  P: { color: '#9df7dd', shape: [[1, 1, 0], [1, 1, 1], [0, 0, 0]], bonus: true },
+  U: { color: '#ff9ec5', shape: [[1, 0, 1], [1, 1, 1], [0, 0, 0]], bonus: true },
 };
 
 const pieceNames = Object.keys(PIECES);
 const scoreTable = [0, 100, 300, 500, 800];
+const levelStep = 10;
+const minDropInterval = 100;
+const dropDecay = 55;
 
 let board;
 let currentPiece;
@@ -42,6 +50,17 @@ let paused = false;
 let dropInterval = 700;
 let lastTime = 0;
 let dropCounter = 0;
+let audioContext = null;
+let audioReady = false;
+let soundEnabled = true;
+let bonusActive = false;
+
+function getAvailablePieceNames() {
+  const names = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+  if (level >= 5) names.push('P');
+  if (level >= 8) names.push('U');
+  return names;
+}
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -49,7 +68,7 @@ function createBoard() {
 
 function randomPiece() {
   if (bag.length === 0) {
-    bag = pieceNames.slice();
+    bag = getAvailablePieceNames();
     for (let index = bag.length - 1; index > 0; index -= 1) {
       const swapIndex = Math.floor(Math.random() * (index + 1));
       [bag[index], bag[swapIndex]] = [bag[swapIndex], bag[index]];
@@ -72,9 +91,101 @@ function createPiece(piece) {
 
 function lockPiece() {
   mergePiece();
-  clearLines();
+  if (currentPiece.bonus) {
+    const bonusCleared = clearBonusLines(currentPiece);
+    if (bonusCleared > 0) {
+      lines += bonusCleared;
+      score += bonusCleared * 150 * level;
+      level = Math.floor(lines / levelStep) + 1;
+      dropInterval = Math.max(minDropInterval, 700 - (level - 1) * dropDecay);
+      updateHud();
+    }
+    setBonusMode(false);
+  } else {
+    clearLines();
+  }
   spawnPiece();
   dropCounter = 0;
+}
+
+function initAudio() {
+  if (!soundEnabled) return;
+  if (audioReady) return;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  audioContext = new AudioContextClass();
+  audioReady = true;
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch(() => {});
+  }
+}
+
+function playTone(frequency, duration = 0.08, type = 'square', gainValue = 0.02) {
+  if (!soundEnabled) return;
+  if (!audioContext) return;
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch(() => {});
+  }
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  gainNode.gain.value = gainValue;
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  oscillator.start();
+  oscillator.stop(audioContext.currentTime + duration);
+}
+
+function playMoveSound() {
+  initAudio();
+  playTone(520, 0.025, 'square', 0.01);
+}
+
+function playRotateSound() {
+  initAudio();
+  playTone(740, 0.05, 'square', 0.015);
+}
+
+function playDropSound() {
+  initAudio();
+  playTone(220, 0.04, 'square', 0.018);
+}
+
+function playLineClearSound() {
+  initAudio();
+  playTone(660, 0.06, 'square', 0.02);
+  window.setTimeout(() => playTone(880, 0.08, 'square', 0.02), 40);
+}
+
+function playGameOverSound() {
+  initAudio();
+  playTone(196, 0.12, 'square', 0.03);
+  window.setTimeout(() => playTone(164, 0.12, 'square', 0.028), 110);
+  window.setTimeout(() => playTone(130, 0.18, 'square', 0.025), 220);
+}
+
+function playBonusMusic() {
+  initAudio();
+  const melody = [880, 988, 1175, 1319, 1175, 988, 880, 988];
+  melody.forEach((note, index) => {
+    window.setTimeout(() => playTone(note, 0.05, 'square', 0.03), index * 65);
+  });
+}
+
+function setBonusMode(active) {
+  bonusActive = active;
+  document.body.classList.toggle('bonus-active', active);
+  bonusBanner.classList.toggle('hidden', !active);
+}
+
+function triggerGameOverEffect() {
+  document.body.classList.add('game-over-active');
+  window.setTimeout(() => document.body.classList.remove('game-over-active'), 800);
+}
+
+function updateSoundButton() {
+  soundBtn.textContent = soundEnabled ? 'Som: ligado' : 'Som: desligado';
 }
 
 function resetGame() {
@@ -90,7 +201,10 @@ function resetGame() {
   dropInterval = 700;
   dropCounter = 0;
   lastTime = 0;
+  document.body.classList.remove('game-over-active');
+  setBonusMode(false);
   updateHud();
+  updateSoundButton();
   hideOverlay();
   draw();
 }
@@ -124,6 +238,7 @@ function rotatePiece() {
     if (!collision(currentPiece.x + kick, currentPiece.y, rotated)) {
       currentPiece.shape = rotated;
       currentPiece.x += kick;
+      playRotateSound();
       return;
     }
   }
@@ -153,12 +268,29 @@ function mergePiece() {
   });
 }
 
+function clearRows(rowsToClear) {
+  const sortedRows = [...new Set(rowsToClear)].filter((row) => row >= 0 && row < ROWS).sort((a, b) => b - a);
+  if (sortedRows.length === 0) return 0;
+
+  sortedRows.forEach((row) => {
+    board.splice(row, 1);
+    board.unshift(Array(COLS).fill(0));
+  });
+
+  return sortedRows.length;
+}
+
 function spawnPiece() {
   currentPiece = createPiece(nextPiece);
   nextPiece = randomPiece();
+  setBonusMode(Boolean(currentPiece.bonus));
+  if (currentPiece.bonus) playBonusMusic();
   if (collision(currentPiece.x, currentPiece.y)) {
     gameOver = true;
+    triggerGameOverEffect();
+    playGameOverSound();
     showOverlay('Fim de jogo', 'Pressione iniciar para tentar outra vez.', 'Jogar de novo');
+    draw();
   }
 }
 
@@ -169,10 +301,12 @@ function movePiece(dx, dy) {
   if (!collision(newX, newY)) {
     currentPiece.x = newX;
     currentPiece.y = newY;
+    if (dx !== 0 || dy !== 0) playMoveSound();
     return true;
   }
   if (dy > 0) {
     lockPiece();
+    if (!gameOver) playDropSound();
     draw();
   }
   return false;
@@ -187,28 +321,47 @@ function hardDrop() {
   }
   score += distance * 2;
   lockPiece();
+  if (!gameOver) playDropSound();
   updateHud();
   draw();
 }
 
 function clearLines() {
-  let cleared = 0;
+  const rowsToClear = [];
   for (let row = ROWS - 1; row >= 0; row -= 1) {
     if (board[row].every(Boolean)) {
-      board.splice(row, 1);
-      board.unshift(Array(COLS).fill(0));
-      cleared += 1;
+      rowsToClear.push(row);
       row += 1;
     }
   }
 
+  const cleared = clearRows(rowsToClear);
   if (cleared > 0) {
+    const previousLevel = level;
     lines += cleared;
     score += scoreTable[cleared] * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(120, 700 - (level - 1) * 55);
+    level = Math.floor(lines / levelStep) + 1;
+    dropInterval = Math.max(minDropInterval, 700 - (level - 1) * dropDecay);
+    if (level !== previousLevel) bag = [];
+    playLineClearSound();
     updateHud();
   }
+  return cleared;
+}
+
+function clearBonusLines(piece) {
+  const rowsToClear = [];
+  piece.shape.forEach((row, rowIndex) => {
+    row.forEach((value, colIndex) => {
+      if (!value) return;
+      const boardRow = piece.y + rowIndex;
+      const boardCol = piece.x + colIndex;
+      if (boardRow >= 0 && boardRow < ROWS && board[boardRow][boardCol]) {
+        rowsToClear.push(boardRow);
+      }
+    });
+  });
+  return clearRows(rowsToClear);
 }
 
 function drawCell(x, y, color) {
@@ -220,7 +373,7 @@ function drawCell(x, y, color) {
 
 function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#04070f';
+  ctx.fillStyle = '#05060a';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   for (let y = 0; y < ROWS; y += 1) {
@@ -228,7 +381,7 @@ function drawBoard() {
       if (board[y][x]) {
         drawCell(x, y, board[y][x]);
       } else {
-        ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.015)';
         ctx.strokeRect(x * BLOCK, y * BLOCK, BLOCK - 1, BLOCK - 1);
       }
     }
@@ -297,7 +450,7 @@ function drawGhost() {
       if (!value) return;
       const x = currentPiece.x + colIndex;
       const yy = y + rowIndex;
-      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
       ctx.fillRect(x * BLOCK, yy * BLOCK, BLOCK - 1, BLOCK - 1);
     });
   });
@@ -389,8 +542,19 @@ function togglePause() {
 }
 
 function startGame() {
+  initAudio();
   resetGame();
   hideOverlay();
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  if (!soundEnabled && audioContext) {
+    audioContext.close();
+    audioContext = null;
+    audioReady = false;
+  }
+  updateSoundButton();
 }
 
 function bindTouchControls() {
@@ -418,11 +582,19 @@ function bindTouchControls() {
 }
 
 startBtn.addEventListener('click', () => {
+  initAudio();
   startGame();
 });
 
-pauseBtn.addEventListener('click', togglePause);
+pauseBtn.addEventListener('click', () => {
+  initAudio();
+  togglePause();
+});
+soundBtn.addEventListener('click', () => {
+  toggleSound();
+});
 overlayBtn.addEventListener('click', () => {
+  initAudio();
   if (gameOver) {
     startGame();
   } else if (paused) {
@@ -434,6 +606,7 @@ overlayBtn.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', handleKey);
+document.addEventListener('pointerdown', initAudio, { once: true });
 
 bindTouchControls();
 
