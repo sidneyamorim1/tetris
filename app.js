@@ -284,7 +284,16 @@ function spawnPiece() {
   currentPiece = createPiece(nextPiece);
   nextPiece = randomPiece();
   setBonusMode(Boolean(currentPiece.bonus));
-  if (currentPiece.bonus) playBonusMusic();
+  if (currentPiece.bonus) {
+    overlayTitle.textContent = 'PEÇA BÔNUS';
+    overlayText.textContent = 'Esta peça apaga linhas ao tocar.';
+    overlayBtn.textContent = 'Boa sorte';
+    overlay.classList.remove('hidden');
+    playBonusMusic();
+    window.setTimeout(() => {
+      if (!gameOver && !paused) hideOverlay();
+    }, 800);
+  }
   if (collision(currentPiece.x, currentPiece.y)) {
     gameOver = true;
     triggerGameOverEffect();
