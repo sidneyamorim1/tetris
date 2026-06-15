@@ -63,12 +63,32 @@
             <h2>Toque</h2>
             <div class="touch-layout">
               <div class="touch-pad" aria-label="Controles de direção">
-                <button data-action="left" class="touch-btn touch-btn--circle touch-btn--left">←</button>
-                <button data-action="rotate" class="touch-btn touch-btn--circle touch-btn--center">+</button>
-                <button data-action="right" class="touch-btn touch-btn--circle touch-btn--right">→</button>
-                <button data-action="down" class="touch-btn touch-btn--circle touch-btn--down">↓</button>
+                <div class="touch-row touch-row--top">
+                  <label class="touch-control">
+                    <button data-action="rotate" class="touch-btn touch-btn--action">↻</button>
+                    <span>Girar</span>
+                  </label>
+                  <label class="touch-control">
+                    <button data-action="drop" class="touch-btn touch-btn--action touch-btn--drop-action">⤓</button>
+                    <span>Queda</span>
+                  </label>
+                </div>
+
+                <div class="touch-row touch-row--bottom">
+                  <label class="touch-control">
+                    <button data-action="left" class="touch-btn touch-btn--circle">←</button>
+                    <span>Esquerda</span>
+                  </label>
+                  <label class="touch-control">
+                    <button data-action="down" class="touch-btn touch-btn--circle">↓</button>
+                    <span>Baixo</span>
+                  </label>
+                  <label class="touch-control">
+                    <button data-action="right" class="touch-btn touch-btn--circle">→</button>
+                    <span>Direita</span>
+                  </label>
+                </div>
               </div>
-              <button data-action="drop" class="touch-btn touch-btn--drop">Queda</button>
             </div>
           </article>
         </aside>
