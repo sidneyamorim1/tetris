@@ -343,7 +343,11 @@ body.bonus-active canvas#board {
   .actions-row { flex-direction: column; }
   .btn { width: 100%; padding: 10px 10px; font-size: 0.66rem; }
   .game-card { gap: 8px; }
-  canvas#board { max-width: min(100%, 320px); }
+  .board-wrap { justify-items: center; }
+  canvas#board {
+    width: min(88vw, 240px);
+    max-width: min(88vw, 240px);
+  }
   .mini-card { padding: 8px; }
   .mini-card h2 { font-size: 0.52rem; line-height: 1.35; }
   .mini-card ul, .overlay p { font-size: 0.48rem; line-height: 1.5; }
@@ -351,11 +355,11 @@ body.bonus-active canvas#board {
     position: static;
     backdrop-filter: none;
   }
-  .touch-pad { width: min(100%, 300px); padding: 10px; }
-  .touch-row { gap: 10px; }
-  .touch-control span { font-size: 0.42rem; }
-  .touch-btn--action { min-height: 88px; font-size: 1.1rem; }
-  .touch-btn--circle { width: clamp(50px, 15vw, 62px); height: clamp(50px, 15vw, 62px); }
+  .touch-pad { width: min(100%, 260px); padding: 10px; gap: 10px; }
+  .touch-row { gap: 8px; }
+  .touch-control span { font-size: 0.4rem; }
+  .touch-btn--action { min-height: 78px; font-size: 1rem; }
+  .touch-btn--circle { width: clamp(46px, 14vw, 56px); height: clamp(46px, 14vw, 56px); }
   .touch-btn--drop { min-height: 44px; }
 }
 
